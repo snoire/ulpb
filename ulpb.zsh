@@ -11,16 +11,18 @@ EXEC='./ulpb.py'
 
 
 # 进度条
-float count_bar=1.0
 total_lines=$(wc -l $INPUTFILE)
 total_lines=${total_lines[(w)1]}
-width=$(stty size)                      #获取屏幕宽度
-width=${width[(w)2]}                    #取第二个数字（宽度）
-width=$((width-16))                     #除了#号，还要预留几个位置给其他字符
+width=$(stty size)                      # 获取屏幕宽度
+width=${width[(w)2]}                    # 取第二个数字（宽度）
+width=$(((width-18)*7/8))               # 除了#号，还要预留几个位置给其他字符
+line=0
+float increment=0
+float gap=$((total_lines*1.0/width))    # 每隔多少个，进度条增加一
 
 progress_sign=""
-printfmt="[%-"$((width*7/8))"s] %6d %6.2f%% %c\r"  #这样写就可以自适应了
-arry=("\\" "\\" "|" "|" "/" "/" "-" "-")           #4个太快了，换成8个，\\是转义
+printfmt="[%-"$width"s] %6d %6.2f%% %c\r"             # 这样写就可以自适应了
+arry=("\\" "\\" "|" "|" "/" "/" "-" "-")              # 4个太快了，换成8个，\\是转义
 
 
 count=0
@@ -48,13 +50,15 @@ for i (${(f)"$(<$INPUTFILE)"}) {        # 逐行处理
     }
 
     # 打印进度条
-    (( index=count_bar%8 ))
-    printf $printfmt "$progress_sign" $count_bar "$((count_bar*100/total_lines))" "${arry[$index]}"
-    # 每隔多少个，进度条增加一
-    if (( count_bar%(total_lines/(width*7/8)) == 0 )) {
+    (( increment++ ))
+    while (( increment >= gap )) {
         progress_sign+="#"
+        (( increment -= gap ))
     }
-    (( count_bar++ ))
+
+    (( line++ ))
+    (( index = line % 8 ))
+    printf $printfmt "$progress_sign" $line "$((line*100.0/total_lines))" "${arry[$index]}"
 }
 printf "\n"
 
