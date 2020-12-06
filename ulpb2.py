@@ -13,7 +13,7 @@ if len(sys.argv) != 3:
 # 声母转换表
 ulpb1 = {'sh': 'u', 'ch': 'i', 'zh': 'v'}
 # 韵母转换表
-ulpb2 = {'iu': 'q', 'ei': 'w', 'uan': 'r', 'ue': 't',
+ulpb2 = {'iu': 'q', 'ei': 'w', 'uan': 'r', 'ue': 't', 've': 't',
         'un': 'y', 'uo': 'o', 'ie': 'p',
         'ong': 's', 'iong': 's', 'ai': 'd', 'en': 'f', 'eng': 'g',
         'ang': 'h', 'an': 'j', 'uai': 'k', 'ing': 'k', 'uang': 'l', 'iang': 'l',
@@ -22,14 +22,17 @@ ulpb2 = {'iu': 'q', 'ei': 'w', 'uan': 'r', 'ue': 't',
 # 零声母转换表
 ulpb3 = {'a': 'aa', 'e': 'ee', 'o': 'oo', 'ang': 'ah', 'eng': 'eg'}
 
-style1 = Style.INITIALS
-style2 = Style.FINALS
 
 # 将汉字转换成双拼
-def ulpb(key):
-    # https://pypinyin.readthedocs.io/zh_CN/master/usage.html#strict
-    lt1 = lazy_pinyin(key, style=style1, strict=False)
-    lt2 = lazy_pinyin(key, style=style2, strict=False)
+def ulpb(key, quanpin):
+    if len(key) == 1:               # 单字
+        matcher = re.search(pattern_pinyin, quanpin)
+        lt1 = [matcher.group(1) if matcher.group(1) != None else '']
+        lt2 = [matcher.group(2)]
+    else:                           # 词语
+        # https://pypinyin.readthedocs.io/zh_CN/master/usage.html#strict
+        lt1 = lazy_pinyin(key, style=Style.INITIALS, strict=False)        # 取声母
+        lt2 = lazy_pinyin(key, style=Style.FINALS, strict=False)          # 取韵母
 
     for i in range(len(key)):
         if len(lt1[i]) > 0:         # 有声母
@@ -43,17 +46,21 @@ def ulpb(key):
 
 
 
-regex = r"^\$ddcmd\((.+?),.+?\)\s+(?=\w+$)"       # 匹配一条记录，不包括最后的全拼
-pattern = re.compile(regex)
+regex_line = r"^(\$ddcmd\()(.+?)(,.+?\)\s+)(\w+)$"     # 匹配一条记录，把其中的汉字（group(2)）和拼音取出来（group(4)）
+pattern_line = re.compile(regex_line)
+
+regex_pinyin = (r"(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?"  # 匹配声母和韵母
+        r"(iang|ang|eng|iong|ing|ong|uang|uai|uan|iao|ian"
+        r"|iu|ei|ue|un|uo|ie|ai|en|an|ou|ua|ia|ao|ui|in|[aoeiuv])")
+pattern_pinyin = re.compile(regex_pinyin)
 
 with open(sys.argv[1], 'r', encoding='utf-8-sig') as f1:                 # 输入文件
     with open(sys.argv[2], 'w', encoding='utf-8', newline='\n') as f2:   # 输出文件
         for line in f1:                                                  # 逐行处理
-            matcher = re.search(pattern, line)
+            matcher = re.search(pattern_line, line)
             if matcher != None:                   # 匹配
-                outputstr = matcher.group(0) + ulpb(matcher.group(1)) + '\n'
+                outputstr = matcher.group(1) + matcher.group(2) + matcher.group(3) + ulpb(matcher.group(2), matcher.group(4)) + '\n'
             else:                                 # 不匹配
                 outputstr = line
-            #print(outputstr, end='')
             f2.write(outputstr)
 
