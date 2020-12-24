@@ -46,21 +46,28 @@ def ulpb(key, quanpin):
 
 
 
-regex_line = r"^(\$ddcmd\()(.+?)(,.+?\)\s+)(\w+)$"     # 匹配一条记录，把其中的汉字（group(2)）和拼音取出来（group(4)）
+# 匹配一条记录，把其中的汉字（group(2)）、辅码（group(3)）和拼音取出来（group(4)）
+regex_line = r"^(\$ddcmd\((.+?),.+?(?:\\\\2|_)([a-z]).+?\)\s+)(\w+)$"
 pattern_line = re.compile(regex_line)
 
-regex_pinyin = (r"(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?"  # 匹配声母和韵母
+# 匹配声母和韵母
+regex_pinyin = (r"(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?"
         r"(iang|ang|eng|iong|ing|ong|uang|uai|uan|iao|ian"
         r"|iu|ei|ue|un|uo|ie|ai|en|an|ou|ua|ia|ao|ui|in|[aoeiuv])")
 pattern_pinyin = re.compile(regex_pinyin)
+
+lines_seen = set()
 
 with open(sys.argv[1], 'r', encoding='utf-8-sig') as f1:                 # 输入文件
     with open(sys.argv[2], 'w', encoding='utf-8', newline='\n') as f2:   # 输出文件
         for line in f1:                                                  # 逐行处理
             matcher = re.search(pattern_line, line)
             if matcher != None:                   # 匹配
-                outputstr = matcher.group(1) + matcher.group(2) + matcher.group(3) + ulpb(matcher.group(2), matcher.group(4)) + '\n'
+                outputstr = matcher.group(1) + ulpb(matcher.group(2), matcher.group(4))
+                outputstr += '\n' + outputstr + matcher.group(3) + '\n'
             else:                                 # 不匹配
                 outputstr = line
-            f2.write(outputstr)
+            if outputstr not in lines_seen:       # 去除重复行
+                f2.write(outputstr)
+                lines_seen.add(outputstr)
 
