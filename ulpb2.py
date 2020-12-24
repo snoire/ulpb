@@ -51,9 +51,7 @@ regex_line = r"^(\$ddcmd\((.+?),.+?(?:\\\\2|_)([a-z]).+?\)\s+)(\w+)$"
 pattern_line = re.compile(regex_line)
 
 # 匹配声母和韵母
-regex_pinyin = (r"(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?"
-        r"(iang|ang|eng|iong|ing|ong|uang|uai|uan|iao|ian"
-        r"|iu|ei|ue|un|uo|ie|ai|en|an|ou|ua|ia|ao|ui|in|[aoeiuv])")
+regex_pinyin = r"(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?([a-z]+)"
 pattern_pinyin = re.compile(regex_pinyin)
 
 lines_seen = set()
