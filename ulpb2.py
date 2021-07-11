@@ -6,7 +6,7 @@ import sys, os, re
 from pypinyin import lazy_pinyin, Style
 
 if len(sys.argv) != 3:
-    print("Usage: $0 <inputfile> <outputfile>", file=sys.stderr)
+    print("Usage: {} <inputfile> <outputfile>".format(sys.argv[0]), file=sys.stderr)
     os._exit(1)
 
 
